@@ -208,6 +208,18 @@
       </table>
     </div>
 
+    <p> <b><u>Extra Credit:</u></b> I implemented edge splits for edges along the boundary. In order to do so, I implemented the helper function <code>splitBoundaryEdge()</code>, which is called when the edge passed into <code> splitEdge()</code> is a boundary edge. Most of the operations done are still the same as the normal splitEdge function, but we now take extra care to determine which side of the edge is inside the boundary and which is on the outside (since the newly added split will be on the inside). This function only creates 1 new vertex (for the split point), 2 new edges, 1 new face, and 4 new halfedges. This follows from the rules of splitting along the boundary, since we do not need to add anything to the virtual face, other than a halfedge to be the twin of the newly created halfedge along the original edge. See below for a screenshot of me testing out the functionality on the boundary of beetle.dae (it's super zoomed in, so the back of the car is appearing on the bottom-half of the screenshot): </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/task5_ec.png" align="middle" width="400px" />
+            <figcaption align="middle">Boundary Edge Splits (beetle.dae)</figcaption>
+        </tr>
+      </table>
+    </div>
+
     <h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
 
     <p> In order to implement the loop subdivision algorithm, I primarily followed the skeleton comments provided in the starter code. I first calculated and stored the new positions for each vertex in the original vertex mesh based on the subdivision rule provided in the spec. For each of these vertices, I also marked them as part of the original batch of vertices (not new). One thing I had to do was write the <code> computeCentroid() </code> function for the Vertex class, which iterates through the neighboring vertices of a given vertex and averages their positions (which is used in the loop subdivision rule calculations mentioned earlier). For all the edges in the mesh, I also updated the vertex positions for these edges (the new vertices that would be created in the center of each of these edges) based on the rule given in the spec: 3/8 * (A + B) + 1/8 * (C + D). After doing these calculations, I proceeded by iterating through all the original edges of the mesh, splitting each one by one and marking the edges accordingly as new/old. Then, I flipped any edge connecting one old and one new vertex (by iterating through the list of edges in the mesh). Finally, I set each vertex's position field to its newPosition value (which we determined in earlier steps of the procedure). Overall, this accurately subdivided our mesh with updated values for all the vertices. </p>
@@ -313,6 +325,43 @@
           <td>
             <img src="images/task6_17.png" align="middle" width="400px" />
             <figcaption align="middle">4th Iteration</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p> <b><u>Extra Credit:</u></b> I implemented support for loop subdivision on meshes with boundaries. First, I ensured that my edge split algorithm could function properly on edges along the boundary (see task 5 extra credit section above). I was able to reuse most of the code in the <code> MeshResampler::upsample() </code> function that I wrote earlier for this task. One primary difference was the method by which I computed the updated vertex positions for edges along the boundary. For such edges, I only took into account the two vertices at the ends of the given edge, rather than taking into account the opposite vertices as well (since now one of these opposite vertices no longer exists since we're on a boundary). By computing a simple average of the new positions of both of the vertices at the ends of the given boundary edge, the resulting mesh after performing loop subdivision looked smooth. One other modification needed was that I now only needed to mark 1 edge as being "new" after performing a split on a boundary edge, whereas before I needed to do it for 2. See below for some screenshots of loop subdivision on the beetle car below (which has lots of edges along a boundary): </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/task6_ec_1.png" align="middle" width="400px" />
+            <figcaption align="middle">Initial mesh</figcaption>
+          </td>
+          <td>
+            <img src="images/task6_ec_2.png" align="middle" width="400px" />
+            <figcaption align="middle">1 Iteration of Loop Subdivision</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/task6_ec_3.png" align="middle" width="400px" />
+            <figcaption align="middle">2 Iterations of Loop Subdivision</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p> Interestingly, I had a bug where I wasn't correctly calculating the vertex degree for vertices on the boundary of the mesh. As a result, the new positions for vertices were being scaled much more than expected (since the quantity 1-n*u was more than needed). See below for a buggy photo (honestly looks kind of cool!): </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/task6_ec_4.png" align="middle" width="400px" />
+            <figcaption align="middle">Buggy Loop Subdivision</figcaption>
           </td>
         </tr>
       </table>
