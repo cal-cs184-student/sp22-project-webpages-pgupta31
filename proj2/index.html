@@ -180,7 +180,7 @@
 
     <h3 align="middle">Part 5: Half-edge split</h3>
 
-    <p> In order to implement the edge flip operation, I first manually saved pointers to all the initial halfedges, faces, vertices, and edges. This made it easier to redirect pointers when doing the pointer manipulation later on. I then went through each half-edge, vertex, and face, updating the corresponding fields for each. For half-edges, the primary things to pay close attention to were changing next pointers, changing starting vertices, and changing faces. For all the vertices and faces, I made sure to update their corresponding halfedges because we don't know what those were initially set to. After this, I made sure to create new additions to the mesh: 1 new vertex for the center, 3 new edges, 2 new faces, and 6 new half-edges (2 per each of the new edges). For each of these, I proceeded similarly as before, setting their respective fields. For halfedges, the setNeighbors() function was helpful in doing this efficiently. One notible thing was setting the position for the newly added center vertex. This was found by essentially taking the average of the two vertices of the original parameter edge e0. </p>
+    <p> In order to implement the edge flip operation, I first manually saved pointers to all the initial halfedges, faces, vertices, and edges. This made it easier to redirect pointers when doing the pointer manipulation later on. I then went through each half-edge, vertex, and face, updating the corresponding fields for each. For half-edges, the primary things to pay close attention to were changing next pointers, changing starting vertices, and changing faces. For all the vertices and faces, I made sure to update their corresponding halfedges because we don't know what those were initially set to. After this, I made sure to create new additions to the mesh: 1 new vertex for the center, 3 new edges, 2 new faces, and 6 new half-edges (2 per each of the new edges). For each of these, I proceeded similarly as before, setting their respective fields. For halfedges, the <code>setNeighbors()</code> function was helpful in doing this efficiently. One notable thing was setting the position for the newly added center vertex. This was found by essentially taking the average of the two vertices of the original parameter edge e0. </p>
 
     <p> I didn't really use any interesting debugging tricks, but the primary implementation trick I used (that saved lots of time) was just saving pointers to everything before manipulating anything. This made sure that I knew exactly what I was redirecting each pointer to, since manipulating as I went would have likely made the implementation much harder. </p>
 
@@ -370,6 +370,34 @@
     <h2 align="middle">Section III: Optional Extra Credit</h2>
 
     <h3 align="middle">Part 7: Design your own mesh!</h3>
+
+    <p> In order to enhance the simple humanoid mesh, I added shoes, hands/fingers, and some facial features (eyes and a mouth). In order to add shoes, I extruded the legs outwards twice, and adjusted the vertices slightly to look like shoes when smoothed out. To make the eyes, I extruded the top half of the face inwards and extruded the newly created eye sockets inwards. I similarly did the same for the mouth (but on the bottom half of the face). Modeling the fingers definitely took the most amount of work, and I used a reference image to make them seem more realistic. This was done in a similar fashion to the rest of the body, by extruding multiple times for each of the fingers and adding edges to model the finger joints. See some screenshots below for what it ended up looking like! </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/task7_1.png" align="middle" width="400px"  height="400px" />
+            <figcaption align="middle">Initial cubeman mesh</figcaption>
+          </td>
+          <td>
+            <img src="images/task7_2.png" align="middle" width="400px"  height="400px" />
+            <figcaption align="middle">1 Iteration of Loop Subdivision</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="images/task7_3.png" align="middle" width="400px" height="400px" />
+            <figcaption align="middle">2 Iterations of Loop Subdivision</figcaption>
+          </td>
+          <td>
+            <img src="images/task7_4.png" align="middle" width="400px" height="400px" />
+            <figcaption align="middle">Modeling the hand with a reference image</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
 
 </body>
 
