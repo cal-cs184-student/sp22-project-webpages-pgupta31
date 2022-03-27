@@ -1,7 +1,171 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <style>
+    body {
+      padding: 100px;
+      width: 1000px;
+      margin: auto;
+      text-align: left;
+      font-weight: 300;
+      font-family: 'Open Sans', sans-serif;
+      color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style>
+  <title>CS 184 Path Tracer</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+  <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+  <h1 align="middle">Project 3-2: Path Tracer</h1>
+  <h2 align="middle">Parth Gupta</h2>
+  <h2 align="middle">Code: <a href="https://github.com/cal-cs184-student/p3-2-pathtracer-sp22-pgupta-proj3-2">cal-cs184-student/p3-2-pathtracer-sp22-pgupta-proj3-2</a>, <a href="https://cal-cs184-student.github.io/sp22-project-webpages-pgupta31/proj3-2/index.html">Writeup</a></h2>
+
+  <br>
+
+  <div>
+
+    <h2 align="middle">Overview</h2>
+
+    <p> In this project, we first implemented support for mirror and glass materials through MirrorBSDF and GlassBSDF. Mirror materials only take into account the refection of a ray (which simply gets reflected across the normal vector of a surface), while glass additionally takes into account potential refraction of ray (refracted inwards), calculated using the index of refraction. We saw the visual results of this implementation primarily using CBspheres.dae, where the back sphere was generated with MirrorBSDF (only reflection) and the front sphere was generated with GlassBDSF (both reflection and refraction). In part 2 of the project, we then implemented support for microfacet materials. This primarily relies on a normal distribution function (since microfacet materials are modeled with mini microfacet mirrors, each with their own normal direction). Furthermore, we calculated the Fresnel term (individually for the R, G, and B channels) for the BRDF evaluation function. Finally, we saw the effects of importance sampling (particularly with the CBbunny comparison images in the part 2 writeup below), which helps to model the effects of reflecting along these microfacet normals, rather than uniformly in a hemisphere fashion similar to the diffuse model we were previously using. Overall, this project was a great way to explore the topics discussed in lecture 14 in more detail, and I think the results were very visually satisfying! </p>
+
+    <h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+
+    <p> See below for a sequence of images of CBspheres.dae rendered with max_ray_depth set to 0, 1, 2, 3, 4, 5, and 100 (rendered with 64 samples per pixel and 4 samples per light). </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/spheres_0.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 0</figcaption>
+          </td>
+          <td>
+            <img src="images/spheres_1.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 1</figcaption>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="images/spheres_2.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 2</figcaption>
+          </td>
+          <td>
+            <img src="images/spheres_3.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 3</figcaption>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="images/spheres_4.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 4</figcaption>
+          </td>
+          <td>
+            <img src="images/spheres_5.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 5</figcaption>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="images/spheres_100.png" align="middle" width="400px" />
+            <figcaption align="middle">max ray depth 100</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p> With a max ray depth of 0, we see that only the light source appears, since 0-bounce shows light only when a ray directly hits the light source. With a max ray depth of 1, we see that the walls and floor appear (as we saw in project 3-1) since the light is now bouncing once off the walls/floor and into the camera. The spheres are black at this point because light is not being reflected/refracted yet (except for the direct light that gets reflected off the spheres; these are the curved rectangular regions we see on the spheres). This follows from the fact that we need at least 2 bounces of a ray in order for the rest of the sphere to begin to appear, since the ray must (at least) bounce from the light source to the surroundings to the ball and then into the camera. Once we reach a max ray depth of 2, we see that the reflective components of both spheres show up. The back sphere's reflective component is pretty much fully shown (even though its dark) because that one does not contain a refractive component (it is of type MirrorBSDF). Meanwhile, the front sphere only has a small reflective component (it is of type GlassBSDF), since it must account for the refrative component as well (which will only appear at depths 3 or more). As we reach a depth of 3, the front sphere also shows its refractive component in addition to the reflective component. The refractive component is now showing up because we have enough bounces where we can follow the path: light source -> surroundings -> sphere (where it refracts inwards) -> bounces -> hit camera. We see that the reflection of the front sphere in the back sphere is also starting to appear (when we reach ray depth 4, we will finally have enough bounces for the front sphere's reflection in the back sphere to not be black). As we continue to increase the max ray depth from 4 onwards, we see that the overall image begins to get brighter/clearer as we are able to get a more accurate image when considering more ray bounces. </p>
+
+    <p> See below for some other renderings after completing this part! (rendered with 64 samples per pixel and 4 samples per light) </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/dragon_mirror.png" align="middle" width="400px" />
+            <figcaption align="middle">CBdragon.dae (mirror only)</figcaption>
+          </td>
+          <td>
+            <img src="images/lucy_glass.png" align="middle" width="400px" />
+            <figcaption align="middle">CBlucy.dae (glass only)</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <h2 align="middle">Part 2: Microfacet Material</h2>
+
+    <p> See below for a sequence of images of CBdragon_microfacet_au.dae rendered with various alpha values. As we learned, alpha is a measure of the roughness of the material (higher alpha means a rougher material). As we see in the images below, increasing the alpha value allows us to see the bumps in the dragon's texture clearer due to the fact that increasing alpha causes more concentrated microfacets. Moreover, we see that the dragon brightens up substantially because microfacets essentially act like mini mirrors on the surface; so, as the alpha value goes up, we have a bumpier surface (each microfacet having its own normal) and more light bouncing occurring overall once a light ray hits the dragon's surface. </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/dragon_005.png" align="middle" width="400px" />
+            <figcaption align="middle">alpha=0.005</figcaption>
+          </td>
+          <td>
+            <img src="images/dragon_05.png" align="middle" width="400px" />
+            <figcaption align="middle">alpha=0.05</figcaption>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="images/dragon_25.png" align="middle" width="400px" />
+            <figcaption align="middle">alpha=0.25</figcaption>
+          </td>
+          <td>
+            <img src="images/dragon_5.png" align="middle" width="400px" />
+            <figcaption align="middle">alpha=0.5</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p> See below for side-by-side images of CBbunny_microfacet_cu.dae rendered using cosine hemisphere sampling (default) and my importance sampling implementation. We see that the importance sampling implementation causes the resulting bunny to look clearer and brighter overall (along with less noise). With microfacet materials, we don't expect the light to reflect uniformly along a hemisphere (as is the case with diffuse BRDFs), but rather more concentrated along the normal vector of the microfacets themselves. As a result, when we use importance sampling, we take into consideration the pdf (distribution) of the sampled microfacet normal (represented with h in the code). As a result, we have less noise and the image looks clearer. </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/bunny_copper_default.png" align="middle" width="400px" />
+            <figcaption align="middle">Cosine Hemisphere Sampling</figcaption>
+          </td>
+          <td>
+            <img src="images/bunny_copper_importance.png" align="middle" width="400px" />
+            <figcaption align="middle">Importance Sampling</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p> See below for an image of CBbunny with a silver material (compared to the copper material shown in the images above). By looking up the values on the website provided in the spec, I replaced the eta values to (0.15395 0.14499 0.13627) and the k values to (3.6675 3.1824 2.5194). </p>
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="images/bunny_silver.png" align="middle" width="400px" />
+            <figcaption align="middle">Silver Bunny</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+  </div>
+
+</body>
+
 </html>
